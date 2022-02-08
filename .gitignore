@@ -1,0 +1,36 @@
+#HELP:   https://www.atlassian.com/git/tutorials/saving-changes/gitignore#git-ignore-patterns
+#USEFUL: https://github.com/github/gitignore/blob/master/community/embedded/AtmelStudio.gitignore
+#        https://github.com/groupgets/purethermal1-firmware/blob/master/.gitignore
+#        https://www.gitignore.io/api/atmelstudio
+
+#ignore file types
+*.d
+*.su
+*.a
+*.o
+*.mk
+*.eep
+*.elf
+*.hex
+*.lss
+*.map
+*.srec
+*.orig
+*.prefs
+*.history*
+*.metadata*
+*Makefile
+
+#ignore Atollic Studio files
+**/.settings/
+**/.code_review_properties
+
+#ignore Atmel Studio files
+**/.vs/
+
+#ignore Microsoft Visual Code files
+**/.vscode/
+
+#ignore Common builds
+#**/Debug/
+**/Release/
