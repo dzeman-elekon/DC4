@@ -52,12 +52,12 @@ typedef enum
 #define C_TEMP                  0x51        // cteni teploty
 
 // SPINEL CODE (ACK)
-#define	ACK_OK		            0x00		// OK
-#define	ACK_BAD_I	            0x02		// neplatna instrukce
-#define	ACK_BAD_D	            0x03		// neplatna data
-#define	ACK_WD_AD	            0x04		// zakazany zapis / pristup odmitnut
-#define	ACK_DEV_ERR	            0x05		// HW chyba zarizeni
-#define	ACK_AUTO	            0x0E		// automaticky generovany vystup 
+#define ACK_OK                  0x00        // OK
+#define ACK_BAD_I               0x02        // neplatna instrukce
+#define ACK_BAD_D               0x03        // neplatna data
+#define ACK_WD_AD               0x04        // zakazany zapis / pristup odmitnut
+#define ACK_DEV_ERR             0x05        // HW chyba zarizeni
+#define ACK_AUTO                0x0E        // automaticky generovany vystup 
 
 // SPINEL END CHAR (CR)
 #define END_CHAR                0x0D        // zakoncovaci znak

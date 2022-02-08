@@ -53,19 +53,19 @@ int16_t THT2_getTemp (void)
 
     // RECEIVED DATA PARSING
 //  THT2_processMsgResp;
-    if (THT2_UART_rxBuffer[0] == '*')               		// is data in buff
+    if (THT2_UART_rxBuffer[0] == '*')                       // is data in buff
     {
-		if (THT2_UART_rxBuffer[INST] == ACK_OK)             // is ack ok
-		{
-			if (THT2_UART_rxBuffer[DATA + 0] == 0x01)       // is temp
-			{
-				if (THT2_UART_rxBuffer[DATA + 1] == 0x80)   // is valid
-				{
-					temp  = (((uint16_t)THT2_UART_rxBuffer[DATA + 2]) << 8);
-					temp |= (((uint16_t)THT2_UART_rxBuffer[DATA + 3]) << 0);
-				}
-			}
-		}
+        if (THT2_UART_rxBuffer[INST] == ACK_OK)             // is ack ok
+        {
+            if (THT2_UART_rxBuffer[DATA + 0] == 0x01)       // is temp
+            {
+                if (THT2_UART_rxBuffer[DATA + 1] == 0x80)   // is valid
+                {
+                    temp  = (((uint16_t)THT2_UART_rxBuffer[DATA + 2]) << 8);
+                    temp |= (((uint16_t)THT2_UART_rxBuffer[DATA + 3]) << 0);
+                }
+            }
+        }
     }
 
     // NEGATIVE TEMP CONVERSION
@@ -79,5 +79,5 @@ int16_t THT2_getTemp (void)
         retValue = temp;
     }
 
-	return retValue;
+    return retValue;
 }
