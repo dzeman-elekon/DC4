@@ -23,5 +23,5 @@
 "./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o"
 "./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.o"
 "./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o"
+"./tht2/src/spinel.o"
 "./tht2/src/tht2.o"
-"./tht2/src/tht2_spinel.o"

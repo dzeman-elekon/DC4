@@ -21,8 +21,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "../../tht2/inc/tht2.h"
 #include <stdio.h>
+#include <string.h>
+#include "../../tht2/inc/tht2.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,13 +51,16 @@ DMA_HandleTypeDef hdma_uart5_rx;
 DMA_HandleTypeDef hdma_usart6_rx;
 
 /* USER CODE BEGIN PV */
-unsigned char UART_DEBUG_rxBuffer[30] = {"Hello world!\n"};
-unsigned char UART_RS485_rxBuffer[30];
+uint8_t UART_DEBUG_buffer[30] = {"Hello world!\n"};
+uint8_t UART_RS485_buffer[30];
 
 UART_HandleTypeDef * UART_DEBUG = &huart5;
 UART_HandleTypeDef * UART_RS485 = &huart6;
 
-uint16_t temp;
+SPINEL_t spinel;
+THT2_t   tht2;
+
+uint16_t output;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -68,7 +72,7 @@ static void MX_DMA_Init(void);
 static void MX_UART5_Init(void);
 static void MX_USART6_UART_Init(void);
 /* USER CODE BEGIN PFP */
-static void THT2_readTemp(void);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -92,7 +96,8 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  tht2.spData = &spinel;
+  THT2_init(&tht2);
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -112,14 +117,11 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   // DEBUG TX EXAMPLE
-  HAL_UART_Transmit (UART_DEBUG, UART_DEBUG_rxBuffer, 15, 100);
-
-  // RS485 TX EXAMPLE
-//THT2_readTemp();
+  HAL_UART_Transmit (UART_DEBUG, UART_DEBUG_buffer, 15, 100);
 
   // RX EXAMPLE
-  HAL_UART_Receive_DMA (UART_DEBUG, UART_DEBUG_rxBuffer, 1);
-//HAL_UART_Receive_DMA (UART_RS485, UART_RS485_rxBuffer, 1);
+  HAL_UART_Receive_DMA (UART_DEBUG, UART_DEBUG_buffer, 1);
+  HAL_UART_Receive_DMA (UART_RS485, UART_RS485_buffer, 1);
 
   /* USER CODE END 2 */
 
@@ -128,14 +130,46 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	if('t' == UART_DEBUG_rxBuffer[PRE])
-	{
-	  temp = THT2_getTemp();
+  switch(UART_DEBUG_buffer[0])
+  {
+    case 't':
+      
+      output = THT2_getTemp(&tht2);
 
-	  sprintf(UART_DEBUG_rxBuffer, "\nTeplota: %3d,%d C\n", temp/10, temp%10);
+      sprintf(UART_DEBUG_buffer, "\nTeplota: %3d,%d\n", output/10, output%10);
+      HAL_UART_Transmit(UART_DEBUG, UART_DEBUG_buffer, strlen(UART_DEBUG_buffer), 100);
 
-	  HAL_UART_Transmit    (UART_DEBUG, UART_DEBUG_rxBuffer, 19, 100);
-	}
+      break;
+
+    case 'c':
+      
+      output = THT2_setUnit(&tht2, SP_UNIT_C);
+      output = THT2_getUnit(&tht2);
+
+      sprintf(UART_DEBUG_buffer, "\nTemp unit: %d\n", output);
+      HAL_UART_Transmit(UART_DEBUG, UART_DEBUG_buffer, strlen(UART_DEBUG_buffer), 100);
+
+      break;
+
+    case 'f':
+      
+      output = THT2_setUnit(&tht2, SP_UNIT_F);
+      output = THT2_getUnit(&tht2);
+
+      sprintf(UART_DEBUG_buffer, "\nTemp unit: %d\n", output);
+      HAL_UART_Transmit(UART_DEBUG, UART_DEBUG_buffer, strlen(UART_DEBUG_buffer), 100);
+
+      break;
+    
+    case 'r':
+
+      output = THT2_reset(&tht2);
+
+      sprintf(UART_DEBUG_buffer, "\nReset: %d\n", output);
+      HAL_UART_Transmit(UART_DEBUG, UART_DEBUG_buffer, strlen(UART_DEBUG_buffer), 100);
+
+      break;
+  }
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -377,26 +411,21 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   if(huart == UART_RS485)
   {
-    HAL_UART_Transmit    (UART_DEBUG, UART_RS485_rxBuffer, 1, 100);
-//  HAL_UART_Receive_DMA (UART_RS485, UART_RS485_rxBuffer, 1);
+//	HAL_UART_Transmit    (UART_DEBUG, UART_RS485_buffer, 1, 100);
+
+    if (true == THT2_msgReceive(&tht2, UART_RS485_buffer, 1))
+    {
+      SPINEL_msgParse(tht2.spData, tht2.msgBuffer);
+    }
+
+    HAL_UART_Receive_DMA (UART_RS485, UART_RS485_buffer, 1);
   }
 
   if(huart == UART_DEBUG)
   {
-	HAL_UART_Transmit    (UART_DEBUG, UART_DEBUG_rxBuffer, 1, 100);
-	HAL_UART_Receive_DMA (UART_DEBUG, UART_DEBUG_rxBuffer, 1);
+    HAL_UART_Transmit    (UART_DEBUG, UART_DEBUG_buffer, 1, 100);
+    HAL_UART_Receive_DMA (UART_DEBUG, UART_DEBUG_buffer, 1);
   }
-}
-
-void THT2_readTemp(void)
-{
-  unsigned char data    = 0;
-  unsigned char dataLen = 1;
-
-  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_11, GPIO_PIN_SET);
-  THT2_prepareMsgRqst(UART_RS485_rxBuffer, C_TEMP, 2, &data, dataLen);
-  HAL_UART_Transmit(UART_RS485, UART_RS485_rxBuffer, (9+dataLen), 100);
-  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_11, GPIO_PIN_RESET);
 }
 
 /* USER CODE END 4 */

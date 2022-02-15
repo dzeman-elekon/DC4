@@ -9,75 +9,133 @@
  */
 
 #include "../inc/tht2.h"
-#include "../inc/tht2_cfg.h"
 
 
-unsigned char THT2_UART_txBuffer[CFG_THT2_UART_BUFFER_SIZE];
-unsigned char THT2_UART_rxBuffer[CFG_THT2_UART_BUFFER_SIZE];
-
+static uint8_t msgData[CFG_THT2_MSG_DATA_BUFFER_SIZE];
+static uint8_t msgDataLen;
 
 /**
  * @brief 
  * 
+ * @param me 
  */
-void THT2_init(void)
+void THT2_init(THT2_t * me)
 {
-    // TODO
+    SP_MSG_DATA_LEN         = 0;
+    SP_MSG_DATA[0]          = 0x00;
+
+    THT2_MSG_INDEX          = 0;
+    THT2_MSG_BUFFER[0]      = SP_END_CHAR;
 }
 
 /**
  * @brief 
  * 
+ * @param me 
  * @return int16_t 
  */
-int16_t THT2_getTemp (void)
+int16_t THT2_getTemp(THT2_t * me)
 {
-    int16_t       retValue  = 0x7FFF;
-    uint16_t      temp      = 0x7FFF;
-    unsigned char data      = 0;
-    unsigned char dataLen   = 1;
+    SP_MSG_DATA_LEN = 1;
+    SP_MSG_DATA[0]  = 0x00;
 
-    // PREPARE BUFFERS
-    THT2_prepareMsgRqst(THT2_UART_txBuffer, C_TEMP, 2, &data, dataLen);
-    THT2_UART_rxBuffer[0] = '\0';
+    // PREP MSG
+    SPINEL_msgPrepare(me->spData, THT2_MSG_BUFFER, SP_INST_TEMP, 2, SP_MSG_DATA, SP_MSG_DATA_LEN);
 
-    // TRANSMIT REQUEST  
-    THT2_GPIO_DE_ENABLE();
-    THT2_UART_TX(THT2_UART_txBuffer, (9+dataLen));
-    THT2_GPIO_DE_DISABLE();
-
-    // RECEIVE RESPONCE
-    while (0 != THT2_UART_RX(THT2_UART_rxBuffer, 13));
+    // SEND MSG
+    THT2_MSG_SEND(THT2_MSG_BUFFER, (SP_MSG_LEN + SP_MSG_DATA_LEN));
 
     HAL_Delay(100);
 
-    // RECEIVED DATA PARSING
-//  THT2_processMsgResp;
-    if (THT2_UART_rxBuffer[0] == '*')                       // is data in buff
+    return me->spData->temp;
+}
+
+
+/**
+ * @brief 
+ * 
+ * @param me 
+ * @return int16_t 
+ */
+int16_t THT2_reset(THT2_t * me)
+{
+    SP_MSG_DATA_LEN = 0;
+    SP_MSG_DATA[0]  = 0x00;
+
+    // PREP MSG
+    SPINEL_msgPrepare(me->spData, THT2_MSG_BUFFER, SP_INST_RESET, 2, SP_MSG_DATA, SP_MSG_DATA_LEN);
+
+    // SEND MSG
+    THT2_MSG_SEND(THT2_MSG_BUFFER, (SP_MSG_LEN + SP_MSG_DATA_LEN));
+
+    HAL_Delay(100);
+
+    return me->spData->state;
+}
+
+int16_t THT2_setUnit(THT2_t * me, uint8_t unit)
+{
+    SP_MSG_DATA_LEN = 2;
+    SP_MSG_DATA[0]  = SP_CH0_ALL;
+    SP_MSG_DATA[1]  = unit;
+
+    // PREP MSG
+    SPINEL_msgPrepare(me->spData, THT2_MSG_BUFFER, SP_INST_WUNIT, 2, SP_MSG_DATA, SP_MSG_DATA_LEN);
+
+    // SEND MSG
+    THT2_MSG_SEND(THT2_MSG_BUFFER, (SP_MSG_LEN + SP_MSG_DATA_LEN));
+
+    HAL_Delay(100);
+
+    return me->spData->state;
+}
+
+int16_t THT2_getUnit(THT2_t * me)
+{
+    SP_MSG_DATA_LEN = 0;
+    SP_MSG_DATA[0]  = 0x00;
+
+    // PREP MSG
+    SPINEL_msgPrepare(me->spData, THT2_MSG_BUFFER, SP_INST_RUNIT, 2, SP_MSG_DATA, SP_MSG_DATA_LEN);
+
+    // SEND MSG
+    THT2_MSG_SEND(THT2_MSG_BUFFER, (SP_MSG_LEN + SP_MSG_DATA_LEN));
+
+    HAL_Delay(100);
+
+    return me->spData->tempUnit;
+}
+
+/**
+ * @brief 
+ * 
+ * @param me 
+ * @param data 
+ * @param dataLen 
+ * @return true 
+ * @return false 
+ */
+bool THT2_msgReceive (THT2_t * me, uint8_t * data, uint8_t dataLen)
+{
+    if ((data == NULL) || (dataLen == 0)) return false;
+
+    for (uint8_t i = 0; i < dataLen; i++)
     {
-        if (THT2_UART_rxBuffer[INST] == ACK_OK)             // is ack ok
+        // BEGIN OF MSG
+        if (data[i] == SP_PREXIF)
         {
-            if (THT2_UART_rxBuffer[DATA + 0] == 0x01)       // is temp
-            {
-                if (THT2_UART_rxBuffer[DATA + 1] == 0x80)   // is valid
-                {
-                    temp  = (((uint16_t)THT2_UART_rxBuffer[DATA + 2]) << 8);
-                    temp |= (((uint16_t)THT2_UART_rxBuffer[DATA + 3]) << 0);
-                }
-            }
+            THT2_MSG_INDEX = 0;
+        }
+
+        THT2_MSG_BUFFER[THT2_MSG_INDEX++] = data[i];
+        THT2_MSG_BUFFER[THT2_MSG_INDEX]   = SP_END_CHAR;
+
+        // END OF MSG
+        if (data[i] == SP_END_CHAR)
+        {
+            return true;
         }
     }
 
-    // NEGATIVE TEMP CONVERSION
-    if (temp > 0x7FFF)
-    {
-        retValue = temp - 0x10000;
-    }
-    else
-    if (temp < 0x7FFF)
-    {
-        retValue = temp;
-    }
-
-    return retValue;
+    return false;
 }
