@@ -24,20 +24,25 @@ typedef struct THT2_t
     uint8_t             msgBuffer[CFG_THT2_MSG_BUFFER_SIZE];
     uint8_t             msgIndex;
 
-    SPINEL_t          * spData;
+    SPINEL_t          * spinel;
 
 }   THT2_t;
 
 
-void    THT2_init       (THT2_t * me);
-int16_t THT2_getTemp    (THT2_t * me);
-int16_t THT2_reset      (THT2_t * me);
-int16_t THT2_setUnit    (THT2_t * me, uint8_t unit);
-int16_t THT2_getUnit    (THT2_t * me);
+// MSG INST
+void THT2_init          (THT2_t * me);
+void THT2_getMeasure    (THT2_t * me);
+void THT2_reset         (THT2_t * me);
+void THT2_setUnit       (THT2_t * me, uint8_t unit);
+void THT2_getUnit       (THT2_t * me);
+void THT2_getSensID     (THT2_t * me);
 
+bool THT2_waitForACK    (THT2_t * me, uint16_t time);
 
-// UART RS485 RX
-bool    THT2_msgReceive (THT2_t * me, uint8_t * data, uint8_t dataLen);
+// MSG ACK (RX CLBCK)
+bool THT2_msgReceive    (THT2_t * me, uint8_t * data, uint8_t dataLen);
+bool THT2_msgParse      (THT2_t * me);
+
 
 
 #endif /* THT2_H_ */

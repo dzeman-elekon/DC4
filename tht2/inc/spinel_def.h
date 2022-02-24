@@ -64,9 +64,10 @@
 #define SP_INST_NAME            0xf3        // dotaz na jmeno a typ zarizeni
 #define SP_INST_RCE             0xf4        // cteni chyb komunikace
 
-#define SP_INST_TEMP            0x51        // cteni teploty
+#define SP_INST_MEASR           0x51        // cteni hodnot
 #define SP_INST_WUNIT           0x1A        // zapis teplotni jednotky
 #define SP_INST_RUNIT           0x1B        // cteni teplotni jednotky
+#define SP_INST_STYPE           0xB1        // cteni typu cidla
 
 // SPINEL CODES [ACK]
 #define SP_ACK_OK               0x00        // OK
@@ -74,7 +75,10 @@
 #define SP_ACK_BAD_D            0x03        // neplatna data
 #define SP_ACK_WD_AD            0x04        // zakazany zapis / pristup odmitnut
 #define SP_ACK_DEV_ERR          0x05        // HW chyba zarizeni
-#define SP_ACK_AUTO             0x0E        // automaticky generovany vystup 
+#define SP_ACK_NO_DATA          0x06        // nejsou k dispozici zadna data
+#define SP_ACK_AUTO             0x0E        // automaticky generovany vystup
+
+#define SP_ACK_UNKN             0xFF        // neznamy stav (neplatny)
 
 // SPINEL END CHAR [CR]
 #define SP_END_CHAR             0x0D        // zakoncovaci znak
@@ -84,18 +88,25 @@
 // SPINEL MSG DATA - CONTENT
 // ---------------------------------------------------------------------------------------------------
 
-#define SP_VALID_DATA           0x80
+#define SP_VALID_DATA           0x80        // validni data
 
-// SPINEL CHANNELS
-#define SP_CH0_ALL              0x00
-#define SP_CH1_TEMP             0x01
-#define SP_CH2_HUMI             0x02
-#define SP_CH3_DEWP             0x03
+// SPINEL SENSOR CHANNELS
+#define SP_SENS_CH0_ALL         0x00        // vsechny
+#define SP_SENS_CH1_TEMP        0x01        // teplota
+#define SP_SENS_CH2_HUMI        0x02        // vlhkost
+#define SP_SENS_CH3_DEWP        0x03        // rosny bod
 
-// SPINEL TEMP UNIT
-#define SP_UNIT_C               0x00
-#define SP_UNIT_F               0x01
-#define SP_UNIT_K               0x02
+// SPINEL SENSOR UNIT
+#define SP_SENS_UNIT_C          0x00        // stupne celsia
+#define SP_SENS_UNIT_F          0x01        // stupne fahrenheita
+#define SP_SENS_UNIT_K          0x02        // stupne kelvina
+
+// SPINEL SENSOR TYPE
+#define SP_SENS_TYPE_UNKN       0x00        // žádný
+#define SP_SENS_TYPE_TH15       0x01        // TH15
+#define SP_SENS_TYPE_DS         0x02        // DS
+#define SP_SENS_TYPE_TH3        0x03        // TH3
+#define SP_SENS_TYPE_TMP        0x04        // TMP
 
 // ---------------------------------------------------------------------------------------------------
 

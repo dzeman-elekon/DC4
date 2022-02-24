@@ -22,6 +22,7 @@
 *Makefile
 
 #ignore Atollic Studio files
+**/.metadata/
 **/.settings/
 **/.code_review_properties
 

@@ -51,7 +51,7 @@ DMA_HandleTypeDef hdma_uart5_rx;
 DMA_HandleTypeDef hdma_usart6_rx;
 
 /* USER CODE BEGIN PV */
-uint8_t UART_DEBUG_buffer[30] = {"Hello world!\n"};
+uint8_t UART_DEBUG_buffer[30];
 uint8_t UART_RS485_buffer[30];
 
 UART_HandleTypeDef * UART_DEBUG = &huart5;
@@ -96,7 +96,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  tht2.spData = &spinel;
+  tht2.spinel = &spinel;
   THT2_init(&tht2);
   /* USER CODE END Init */
 
@@ -117,9 +117,10 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   // DEBUG TX EXAMPLE
-  HAL_UART_Transmit (UART_DEBUG, UART_DEBUG_buffer, 15, 100);
+  sprintf(UART_DEBUG_buffer, "\n\n*** DC4 THT2 DEMO ***\n");
+  HAL_UART_Transmit(UART_DEBUG, UART_DEBUG_buffer, strlen(UART_DEBUG_buffer), 100);
 
-  // RX EXAMPLE
+  // RX INPUT ENABLE
   HAL_UART_Receive_DMA (UART_DEBUG, UART_DEBUG_buffer, 1);
   HAL_UART_Receive_DMA (UART_RS485, UART_RS485_buffer, 1);
 
@@ -134,36 +135,72 @@ int main(void)
   {
     case 't':
       
-      output = THT2_getTemp(&tht2);
+      THT2_getMeasure(&tht2);
+      THT2_waitForACK(&tht2, 200);
 
-      sprintf(UART_DEBUG_buffer, "\nTeplota: %3d,%d\n", output/10, output%10);
+      sprintf(UART_DEBUG_buffer, "\nTemp: %3d,%d\n", tht2.spinel->temp/10, tht2.spinel->temp%10);
+      HAL_UART_Transmit(UART_DEBUG, UART_DEBUG_buffer, strlen(UART_DEBUG_buffer), 100);
+
+      break;
+
+    case 'h':
+      
+      THT2_getMeasure(&tht2);
+      THT2_waitForACK(&tht2, 200);
+
+      sprintf(UART_DEBUG_buffer, "\nHumi: %3d,%d\n", tht2.spinel->humi/10, tht2.spinel->humi%10);
+      HAL_UART_Transmit(UART_DEBUG, UART_DEBUG_buffer, strlen(UART_DEBUG_buffer), 100);
+
+      break;
+
+    case 'd':
+      
+      THT2_getMeasure(&tht2);
+      THT2_waitForACK(&tht2, 200);
+
+      sprintf(UART_DEBUG_buffer, "\nDewP: %3d,%d\n", tht2.spinel->dewp/10, tht2.spinel->dewp%10);
       HAL_UART_Transmit(UART_DEBUG, UART_DEBUG_buffer, strlen(UART_DEBUG_buffer), 100);
 
       break;
 
     case 'c':
       
-      output = THT2_setUnit(&tht2, SP_UNIT_C);
-      output = THT2_getUnit(&tht2);
+      THT2_setUnit(&tht2, SP_SENS_UNIT_C);
+      THT2_waitForACK(&tht2, 200);
+      THT2_getUnit(&tht2);
+      THT2_waitForACK(&tht2, 200);
 
-      sprintf(UART_DEBUG_buffer, "\nTemp unit: %d\n", output);
+      sprintf(UART_DEBUG_buffer, "\nTemp unit: %d\n", tht2.spinel->tempUnit);
       HAL_UART_Transmit(UART_DEBUG, UART_DEBUG_buffer, strlen(UART_DEBUG_buffer), 100);
 
       break;
 
     case 'f':
       
-      output = THT2_setUnit(&tht2, SP_UNIT_F);
-      output = THT2_getUnit(&tht2);
+      THT2_setUnit(&tht2, SP_SENS_UNIT_F);
+      THT2_waitForACK(&tht2, 200);
+      THT2_getUnit(&tht2);
+      THT2_waitForACK(&tht2, 200);
 
-      sprintf(UART_DEBUG_buffer, "\nTemp unit: %d\n", output);
+      sprintf(UART_DEBUG_buffer, "\nTemp unit: %d\n", tht2.spinel->tempUnit);
       HAL_UART_Transmit(UART_DEBUG, UART_DEBUG_buffer, strlen(UART_DEBUG_buffer), 100);
 
       break;
-    
+
+    case 'i':
+
+      THT2_getSensID(&tht2);
+      THT2_waitForACK(&tht2, 200);
+
+      sprintf(UART_DEBUG_buffer, "\nSens ID: %d\n", tht2.spinel->sensID);
+      HAL_UART_Transmit(UART_DEBUG, UART_DEBUG_buffer, strlen(UART_DEBUG_buffer), 100);
+
+      break;
+
     case 'r':
 
-      output = THT2_reset(&tht2);
+      THT2_reset(&tht2);
+      output = THT2_waitForACK(&tht2, 200);
 
       sprintf(UART_DEBUG_buffer, "\nReset: %d\n", output);
       HAL_UART_Transmit(UART_DEBUG, UART_DEBUG_buffer, strlen(UART_DEBUG_buffer), 100);
@@ -415,7 +452,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
     if (true == THT2_msgReceive(&tht2, UART_RS485_buffer, 1))
     {
-      SPINEL_msgParse(tht2.spData, tht2.msgBuffer);
+      output = THT2_msgParse(&tht2);
     }
 
     HAL_UART_Receive_DMA (UART_RS485, UART_RS485_buffer, 1);
