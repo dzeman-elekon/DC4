@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "../../tht2/inc/tht2.h"
+#include "../../display/inc/display.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -66,20 +67,12 @@ UART_HandleTypeDef * UART_RS485 = &huart6;
 SPINEL_t spinel;
 THT2_t   tht2;
 
-// DISPLAY
-uint8_t  displayData[]  = {254, 254, 254, 254, 254, 254};
-uint8_t  displayFrame[] = {  0,   0,   0,   0,   0,   0};
-uint8_t  displayBrLvl[] = {  4,  16,  32,  64, 128,   0};
-uint8_t  displayTemp    = 0;
-
 // TIMER 4
-uint8_t  tim4_ocBitPs   = 0;
-uint16_t tim4_ocCount   = 512;
-uint8_t  tim4_dir       = 0;
 TIM_OC_InitTypeDef sConfigOC = {0};
 
 // OTHER
 uint16_t output;
+uint8_t  displayTemp    = 0;
 
 /* USER CODE END PV */
 
@@ -176,12 +169,12 @@ int main(void)
 
     case '\r':
 
-      displayBrLvl[0] = displayTemp;
+      display_setBrightLvl((display_brLvlProfile_t){.text = displayTemp, .dots = 255});
+
+      sprintf(UART_DEBUG_buffer, "\nBright: %d\n", displayTemp);
+      HAL_UART_Transmit(UART_DEBUG, UART_DEBUG_buffer, strlen(UART_DEBUG_buffer), 100);
       displayTemp     = 0;
       
-      sprintf(UART_DEBUG_buffer, "\nBright: %d\n", displayBrLvl[0]);
-      HAL_UART_Transmit(UART_DEBUG, UART_DEBUG_buffer, strlen(UART_DEBUG_buffer), 100);
-
       break;
 
     case 't':
@@ -600,118 +593,7 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if (htim->Instance == TIM4)
   {
-    // TIMER 4
-    // ----------------------------------------------------
-    
-    tim4_ocBitPs += 1;
-    tim4_ocBitPs &= 7;
-
-    // FILL CFG OC STRUCT
-    if (tim4_ocBitPs == 0)
-    {
-      sConfigOC.Pulse = 1;
-    }
-    else
-    {
-      sConfigOC.Pulse = sConfigOC.Pulse << 1;
-    }
-
-    // SET TIMER BY CFG OC STRUCT
-    if (HAL_TIM_OC_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
-    {
-      Error_Handler();
-    }
-
-    // RESET TIMER COUNTER
-    __HAL_TIM_SET_COUNTER(&htim4 , 0);
-
-    // ----------------------------------------------------
-
-    // DISPLAY DATA FRAME
-    // ----------------------------------------------------
-    
-    for (uint8_t i = 0; i < 6; i++)
-    {
-      if (displayBrLvl[i] & (1 << tim4_ocBitPs))
-      {
-        displayFrame[i] = displayData[i];
-      }
-      else
-      {
-        displayFrame[i] = 0;
-      }
-    }
-
-    // ----------------------------------------------------
-
-    // SPI
-    // ----------------------------------------------------
-
-    // SEND
-    HAL_SPI_Transmit(&hspi3, &displayFrame, 6, 100);
-
-    // LATCH
-    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_RESET);
-//  HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_4);
-
-    // OE
-    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_5, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_5, GPIO_PIN_RESET);
-
-    // ----------------------------------------------------
-
-    // DIGIT 6 WAVE EFFECT
-    // ----------------------------------------------------
-    
-    if (tim4_ocBitPs == 0)
-    {
-      if (--tim4_ocCount == 0)
-      {
-        tim4_ocCount = 1;
-
-        switch (tim4_dir)
-        {
-          case 0:
-
-            if (++displayBrLvl[5] == 255) 
-            {
-              tim4_dir        = 1;
-              tim4_ocCount    = 127;
-              displayData[3]  = 255;
-            }
-
-            break;
-
-          case 1:
-            
-            tim4_dir          = 2;
-            displayData[3]    = 254;
-            
-            break;
-
-          case 2:
-
-            if (--displayBrLvl[5] == 1) 
-            {
-              tim4_dir        = 3;
-              tim4_ocCount    = 127;
-              displayData[3]  = 255;
-            }
-
-            break;
-
-          case 3:
-
-            tim4_dir          = 0;
-            displayData[3]    = 254;
-
-            break;
-        }
-      }
-    }
-
-    // ----------------------------------------------------
+    display_sendData();
   }
 }
 

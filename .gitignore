@@ -33,5 +33,5 @@
 **/.vscode/
 
 #ignore Common builds
-#**/Debug/
+**/Debug/
 **/Release/
