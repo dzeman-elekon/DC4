@@ -13,13 +13,13 @@
 #include "../inc/display_adapter.h"
 
 
-uint8_t display_text[]      = {NUM_1, NUM_2, NUM_3, NUM_4, NUM_5, NUM_6};
-uint8_t display_textBrLvl[] = {    4,    16,    32,    64,   128, 	255};
+uint8_t display_text[]      = DISPLAY_TEXT_TEST;
+uint8_t display_textBrLvl[] = DISPLAY_TEXT_BRLVL_TEST;
 
-uint8_t display_dots[]      = {    0,     1,     0,     1,     0,     0};
-uint8_t display_dotsBrLvl[] = {    0,   128,    32,    64,    16,     4};
+uint8_t display_dots[]      = DISPLAY_DOTS_TEST;
+uint8_t display_dotsBrLvl[] = DISPLAY_DOTS_BRLVL_TEST;
 
-uint8_t display_frame[]     = {    0,     0,     0,     0,     0,     0};
+uint8_t display_frame[]     = DISPLAY_TEXT_TEST;
 uint8_t display_frameNum    = 0;
 
 
