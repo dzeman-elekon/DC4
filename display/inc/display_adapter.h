@@ -30,7 +30,7 @@ extern SPI_HandleTypeDef hspi3;
 #define display_GPIO_Output_Disable()            HAL_GPIO_WritePin(GPIOE, GPIO_PIN_5, GPIO_PIN_RESET);
 
 // TIMER
-extern TIM_HandleTypeDef htim4;
+extern TIM_HandleTypeDef htim9;
 extern TIM_OC_InitTypeDef sConfigOC;
 
 #define display_TIM_setForFrameNum(x)           if (x == 0)                                                                 \
@@ -43,13 +43,13 @@ extern TIM_OC_InitTypeDef sConfigOC;
                                                 }                                                                           \
                                                                                                                             \
                                                 /* SET TIMER OC */                                                          \
-                                                if (HAL_TIM_OC_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)  \
+                                                if (HAL_TIM_OC_ConfigChannel(&htim9, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)  \
                                                 {                                                                           \
                                                     Error_Handler();                                                        \
                                                 }                                                                           \
                                                                                                                             \
                                                 /* RESET TIMER COUNTER */                                                   \
-                                                __HAL_TIM_SET_COUNTER(&htim4 , 0);                                          \
+                                                __HAL_TIM_SET_COUNTER(&htim9 , 0);                                          \
 
 
 #endif /* DISPLAY_ADAPTER_H_ */
