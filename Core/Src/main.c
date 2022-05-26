@@ -130,17 +130,17 @@ int main(void)
   MX_TIM4_Init();
   MX_SPI3_Init();
   /* USER CODE BEGIN 2 */
-
+/*
   if (HAL_TIM_Base_Start(&htim4) != HAL_OK)
   {
-//      Error_Handler();
+    Error_Handler();
   }
 
   if (HAL_TIM_Base_Start_IT(&htim4) != HAL_OK)
   {
-//      Error_Handler();
+    Error_Handler();
   }
-
+*/
   HAL_TIM_OC_Start_IT(&htim4, TIM_CHANNEL_1);
 
   // DEBUG TX EXAMPLE
